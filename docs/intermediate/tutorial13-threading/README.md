@@ -1,18 +1,18 @@
 # Multi-threading with Wgpu and Rayon
 
-The main selling point of Vulkan, DirectX 12, Metal, and by extension Wgpu is that these APIs is that they designed from the ground up to be thread safe. Up to this point we have been doing everything on a single thread. That's about to change.
+The main selling point of Vulkan, DirectX 12, Metal, and by extension Wgpu is that these APIs are designed from the ground up to be thread-safe. Up to this point we have been doing everything on a single thread. That's about to change.
 
 <div class="note">
 
 I won't go into what threads are in this tutorial. That is a course in and of itself. All we'll be covering is using threading to make loading resources faster.
 
-We won't go over multithreading rendering as we don't have enough different types of objects to justify that yet. This will change in a coming tutorial
+We won't go over multithreading rendering as we don't have enough different types of objects to justify that yet. This will change in a coming tutorial.
 
 </div>
 
 ## Threading build.rs
 
-If you remember [the pipeline tutorial](../../beginner/tutorial3-pipeline), we created a build script to compile our GLSL shaders to spirv. That had a section in the `main` function that looked like this.
+If you remember [the pipeline tutorial](../../beginner/tutorial3-pipeline), we created a build script to compile our GLSL shaders to SPIR-V. That had a section in the `main` function that looked like this.
 
 ```rust
 // This could be parallelized
@@ -68,7 +68,7 @@ let shaders = shader_paths.into_par_iter()
     .collect::<Result<Vec<_>>>();
 ```
 
-Super simple isn't it? By using `into_par_iter`, `rayon` will try to spread our shader loading across multiple threads if it can. This means that our build script will load the shader text source for multiple shaders at the same time. This has the potential to drastically reduce our build times. 
+Super simple, isn't it? By using `into_par_iter`, `rayon` will try to spread our shader loading across multiple threads if it can. This means that our build script will load the shader text source for multiple shaders at the same time. This has the potential to drastically reduce our build times. 
 
 We can compare the speeds of our compilation by running `cargo build` on both this tutorial and the previous one.
 
@@ -85,13 +85,13 @@ Our build speed is a little more than twice as fast!
 
 <div class="note">
 
-I got these build speeds after building the project one time to get `rayon` installed, and then deleting the .spv files from the previous two projects.
+I got these build speeds after building the project one time to get `rayon` installed, and then deleting the `.spv` files from the previous two projects.
 
 </div>
 
 ## Parallelizing loading models and textures
 
-Currently we load the materials and meshes of our model one at a time. This is a perfect opportunity for multithreading! All our changes will be in `model.rs`. Let's first start with the materials. We'll convert the regular for loop into a `par_iter().map()`.
+Currently we load the materials and meshes of our model one at a time. This is a perfect opportunity for multithreading! All our changes will be in `model.rs`. Let's first start with the materials. We'll convert the regular `for` loop into a `par_iter().map()`.
 
 ```rust
 // model.rs
